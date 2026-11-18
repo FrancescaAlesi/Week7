@@ -1,4 +1,6 @@
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 body {
   margin: 0;
@@ -22,8 +24,13 @@ body {
   text-align: center;
 }
 
-.site-header h1 { margin: 0 0 8px; }
-.site-header p  { margin: 0; opacity: 0.85; }
+.site-header h1 {
+  margin: 0 0 8px;
+}
+.site-header p {
+  margin: 0;
+  opacity: 0.85;
+}
 
 .form-section {
   background: white;
@@ -33,20 +40,24 @@ body {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
-.form-section h2 { margin-top: 0; }
+.form-section h2 {
+  margin-top: 0;
+}
 
 .form .campo {
   margin-bottom: 12px;
 }
 
-.form label {
+.form label,
+label {
   display: block;
   font-weight: bold;
   margin-bottom: 4px;
 }
 
 .form input,
-.form select {
+.form select,
+input {
   width: 100%;
   padding: 8px;
   font-size: 1rem;
@@ -147,7 +158,7 @@ body {
   align-items: center;
 }
 
-.btn-svuota{
+.btn-svuota {
   background-color: transparent;
   color: #dc2626;
   border: 1px solid #dc2626;
@@ -166,4 +177,72 @@ body {
   color: #6b7280;
   font-size: 0.85rem;
   margin-top: 4px;
+}
+
+.risultati {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+}
+
+.risultati li {
+  background: #fafafa;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  border-left: 4px solid hsl(220, 50%, 25%);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.risultati .info {
+  flex: 1;
+}
+
+.risultati .titolo {
+  font-weight: bold;
+  display: block;
+}
+
+.risultati .meta {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.risultati button {
+  background: hsl(145, 55%, 36%);
+  color: white;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.risultati button:hover:not(:disabled) {
+  background: hsl(145, 55%, 28%);
+}
+
+.risultati button:disabled {
+  background: #9ca3af;
+  cursor: default;
+}
+
+.spinner {
+  margin-top: 12px;
+  color: #555;
+  font-style: italic;
+}
+
+.alert-danger {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+  border-radius: 4px;
 }

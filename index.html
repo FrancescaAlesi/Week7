@@ -15,6 +15,20 @@
         </header>
 
         <main class="container">
+            <section class="cerca-section form-section">
+                <h2>Cerca</h2>
+                <div class="campo">
+                    <label for="cerca">Titolo o autore</label>
+                    <input type="text" id="cerca" name="cerca" placeholder="es. Harry Potter, Orwell" required>
+                </div>
+
+                <div id="spinner" class="spinner" hidden>Caricamento in corso...</div>
+                <div id="errore" class="alert alert-danger" hidden></div>
+                <ul id="risultati" class="risultati">
+                    <!-- popolato da JavaScript -->
+                </ul>
+            </section>
+
             <section class="form-section">
                 <h2>Aggiungi un libro</h2>
                 <form id="aggiungi-libro" class="form">

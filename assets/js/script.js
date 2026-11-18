@@ -34,6 +34,95 @@ class LibroDigitale extends Libro {
 }
 
 const STORAGE_KEY = "libri";
+let libri = caricaLibri();
+let controller;
+let timeoutId; 
+
+function cerca(query) {
+  controller?.abort();
+  controller = new AbortController();
+  const { signal } = controller;
+  mostraSpinner();
+
+  const url = new URL("https://openlibrary.org/search.json");
+  url.searchParams.set("q", query);
+  url.searchParams.set("limit", 10);
+
+  fetch(url, { signal })
+    .then((r) => {
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.json();
+    })
+    .then((dati) => {
+      renderRisultati(dati.docs);
+    })
+    .catch((err) => {
+      if (err.name === "AbortError") return;
+      mostraErrore(`Errore durante la ricerca: ${err.message}`);
+    })
+    .finally(() => {
+      if (!signal.aborted) {
+        nascondiSpinner();
+      }
+    });
+}
+
+function renderRisultati(docs) {
+  const listaRisultati = document.getElementById("risultati");
+  docs = docs.filter((d) => d.author_name);
+
+  if (docs.length === 0) {
+    const liVuoto = document.createElement("li");
+    liVuoto.textContent = "Nessun risultato.";
+    listaRisultati.replaceChildren(liVuoto);
+    return;
+  }
+
+  const righe = docs.map((d) => {
+    const titolo = d.title ?? "Titolo sconosciuto";
+    const autore = d.author_name?.[0] ?? "Autore sconosciuto";
+    const anno = d.first_publish_year ?? "?";
+
+    const li = document.createElement("li");
+    const divInfo = document.createElement("div");
+    divInfo.className = "info";
+
+    const spanTitolo = document.createElement("span");
+    spanTitolo.className = "titolo";
+    spanTitolo.textContent = titolo;
+
+    const divMeta = document.createElement("div");
+    divMeta.className = "meta";
+    divMeta.textContent = `${autore} — ${anno}`;
+    divInfo.append(spanTitolo, divMeta);
+
+    const btnAggiungi = document.createElement("button");
+    btnAggiungi.textContent = "Aggiungi";
+    btnAggiungi.dataset.titolo = titolo;
+    btnAggiungi.dataset.autore = autore;
+    btnAggiungi.dataset.anno = anno;
+
+    li.append(divInfo, btnAggiungi);
+    return li;
+  });
+
+  listaRisultati.replaceChildren(...righe);
+}
+
+function mostraSpinner() {
+  document.getElementById("spinner").removeAttribute("hidden");
+  document.getElementById("errore").setAttribute("hidden", "");
+}
+
+function nascondiSpinner() {
+  document.getElementById("spinner").setAttribute("hidden", "");
+}
+
+function mostraErrore(msg) {
+  const elErrore = document.getElementById("errore");
+  elErrore.textContent = msg;
+  elErrore.removeAttribute("hidden");
+}
 
 function salvaLibri() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(libri));
@@ -46,8 +135,6 @@ function caricaLibri() {
       : Libro.fromJSON(d),
   );
 }
-
-let libri = caricaLibri();
 
 function renderLibri() {
   const lista = document.getElementById("lista-libri");
@@ -78,6 +165,36 @@ function renderLibri() {
 
   document.getElementById("contatore").textContent = libri.length;
 }
+
+document.getElementById("cerca").addEventListener("input", (e) => {
+  const query = e.target.value.trim();
+
+  clearTimeout(timeoutId);
+
+  if (query.length < 3) {
+    controller?.abort();
+    nascondiSpinner();
+    document.getElementById("errore").setAttribute("hidden", "");
+    document.getElementById("risultati").innerHTML = "";
+    return;
+  }
+  timeoutId = setTimeout (() => cerca(query), 400); 
+});
+
+document.getElementById("risultati").addEventListener("click", (e) => {
+  const bottone = e.target.closest("button[data-titolo]");
+  if(!bottone) return; 
+
+  const {titolo, autore, anno} = bottone.dataset; 
+  const nuovoLibro = new Libro(titolo, autore, Number(anno) || 0);
+
+  libri.push(nuovoLibro);
+  salvaLibri();
+  renderLibri(); 
+
+  bottone.textContent = "✓ Aggiunto";
+  bottone.disabled = true;
+});
 
 document.getElementById("formato").addEventListener("change", (e) => {
   const campo = document.getElementById("campo-dimensione");
