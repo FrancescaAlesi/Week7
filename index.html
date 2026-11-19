@@ -3,23 +3,34 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Mini-libreria — Settimana VII Giorno I</title>
+        <title>Mini-libreria — Settimana VII</title>
         <link rel="stylesheet" href="assets/css/style.css">
+        <script type="module" src="assets/js/script.js"></script>
     </head>
 
     <body>
 
         <header class="site-header">
-            <h1>La mia libreria</h1>
-            <p>Aggiungi i tuoi libri e segnali come letti.</p>
+            <div class="header-row">
+                <div>
+                    <h1>La mia libreria</h1>
+                    <p>Cerca su Open Library, accedi al tuo profilo, salva e aggiungi i tuoi libri.</p>
+                </div>
+                <div id="auth-box" class="auth-box"></div>
+            </div>
         </header>
 
         <main class="container">
+            <section id="profilo-section" class="profilo-section form-section" hidden>
+                <h2>Il tuo profilo</h2>
+                <div id="profilo" class="profilo"></div>
+            </section>
+
             <section class="cerca-section form-section">
                 <h2>Cerca</h2>
                 <div class="campo">
                     <label for="cerca">Titolo o autore</label>
-                    <input type="text" id="cerca" name="cerca" placeholder="es. Harry Potter, Orwell" required>
+                    <input type="text" id="cerca" name="cerca" placeholder="es. Harry Potter, Orwell">
                 </div>
 
                 <div id="spinner" class="spinner" hidden>Caricamento in corso...</div>
@@ -77,7 +88,5 @@
             </section>
 
         </main>
-
-        <script src="assets/js/script.js"></script>
     </body>
 </html>

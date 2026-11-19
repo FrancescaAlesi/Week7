@@ -1,5 +1,7 @@
 * {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 body {
@@ -22,14 +24,97 @@ body {
   color: white;
   padding: 30px 20px;
   text-align: center;
+  h1 {
+    margin: 0 0 8px;
+  }
+  p {
+    margin: 0;
+    opacity: 0.85;
+  }
 }
 
-.site-header h1 {
-  margin: 0 0 8px;
+.header-row {
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
 }
-.site-header p {
-  margin: 0;
-  opacity: 0.85;
+
+.auth-box {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 10px 14px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.form-login {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  input {
+    width: 130px;
+    padding: 6px 10px;
+    font-size: 0.9rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: white;
+  }
+  button {
+    background: hsl(145, 55%, 36%);
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-radius: 4px;
+    cursor: pointer;
+    &:hover {
+      background: hsl(145, 55%, 28%);
+    }
+  }
+}
+
+.saluto {
+  font-weight: bold;
+  font-size: 0.95rem;
+}
+
+.auth-box > button {
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 5px 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.auth-box > button:hover {
+  background: #b91c1c;
+}
+
+.profilo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 12px;
+  img {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #e5e7eb;
+  }
+}
+.profilo .info {
+  font-size: 0.95rem;
+  color: #1a1a1a;
 }
 
 .form-section {
@@ -38,10 +123,9 @@ body {
   margin-top: 20px;
   border-radius: 6px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-}
-
-.form-section h2 {
-  margin-top: 0;
+  h2 {
+    margin-top: 0;
+  }
 }
 
 .form .campo {
@@ -64,6 +148,12 @@ input {
   border: 1px solid #ccc;
   border-radius: 4px;
   background: white;
+}
+
+.form-login input {
+  width: 130px;
+  padding: 6px 10px;
+  font-size: 0.9rem;
 }
 
 .btn-primary {
@@ -130,6 +220,14 @@ input {
   color: #555;
   margin-left: 6px;
   vertical-align: middle;
+}
+
+.lista-libri .azioni {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: hsl(140, 50%, 35%);
+  font-weight: 500;
 }
 
 .lista-libri .azioni button {
@@ -245,4 +343,8 @@ input {
   color: #b91c1c;
   border: 1px solid #fca5a5;
   border-radius: 4px;
+}
+
+[hidden] {
+  display: none !important;
 }

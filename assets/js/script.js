@@ -1,174 +1,65 @@
-class Libro {
-  static contatore = 0;
-
-  constructor(titolo, autore, anno) {
-    this.id = ++Libro.contatore;
-    this.titolo = titolo;
-    this.autore = autore;
-    this.anno = anno;
-    this.letto = false;
-  }
-
-  segnaComeLetto() {
-    this.letto = true;
-  }
-
-  formato() {
-    return "cartaceo";
-  }
-
-  static fromJSON(d) {
-    return Object.assign(new this(d.titolo, d.autore, d.anno), d);
-  }
-}
-
-class LibroDigitale extends Libro {
-  constructor(titolo, autore, anno, dimensioneMb) {
-    super(titolo, autore, anno);
-    this.dimensioneMb = dimensioneMb;
-  }
-
-  formato() {
-    return `digitale (${this.dimensioneMb} MB)`;
-  }
-}
-
-const STORAGE_KEY = "libri";
+import { Libro, LibroDigitale } from "./modelli.js";
+import { salvaLibri, caricaLibri, svuotaStorageLibri } from "./storage.js";
+import { cercaSuOpenLibrary, login, getToken, rimuoviDatiAuth, caricaProfilo,} from "./api.js";
+import { mostraSpinner, nascondiSpinner, mostraErrore, renderLibri, renderRisultati, renderProfilo, renderAuthBox,} from "./ui.js";
 let libri = caricaLibri();
 let controller;
-let timeoutId; 
+let timeoutId;
 
-function cerca(query) {
+async function eseguiRicerca(query) {
   controller?.abort();
   controller = new AbortController();
   const { signal } = controller;
   mostraSpinner();
 
-  const url = new URL("https://openlibrary.org/search.json");
-  url.searchParams.set("q", query);
-  url.searchParams.set("limit", 10);
-
-  fetch(url, { signal })
-    .then((r) => {
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      return r.json();
-    })
-    .then((dati) => {
-      renderRisultati(dati.docs);
-    })
-    .catch((err) => {
-      if (err.name === "AbortError") return;
+  try {
+    const dati = await cercaSuOpenLibrary(query, signal);
+    renderRisultati(docs);
+  } catch (err) {
+    if (err.name !== "AbortError") {
       mostraErrore(`Errore durante la ricerca: ${err.message}`);
-    })
-    .finally(() => {
-      if (!signal.aborted) {
-        nascondiSpinner();
-      }
-    });
-}
-
-function renderRisultati(docs) {
-  const listaRisultati = document.getElementById("risultati");
-  docs = docs.filter((d) => d.author_name);
-
-  if (docs.length === 0) {
-    const liVuoto = document.createElement("li");
-    liVuoto.textContent = "Nessun risultato.";
-    listaRisultati.replaceChildren(liVuoto);
-    return;
+    }
+  } finally {
+    if (!signal.aborted) {
+      nascondiSpinner();
+    }
   }
-
-  const righe = docs.map((d) => {
-    const titolo = d.title ?? "Titolo sconosciuto";
-    const autore = d.author_name?.[0] ?? "Autore sconosciuto";
-    const anno = d.first_publish_year ?? "?";
-
-    const li = document.createElement("li");
-    const divInfo = document.createElement("div");
-    divInfo.className = "info";
-
-    const spanTitolo = document.createElement("span");
-    spanTitolo.className = "titolo";
-    spanTitolo.textContent = titolo;
-
-    const divMeta = document.createElement("div");
-    divMeta.className = "meta";
-    divMeta.textContent = `${autore} — ${anno}`;
-    divInfo.append(spanTitolo, divMeta);
-
-    const btnAggiungi = document.createElement("button");
-    btnAggiungi.textContent = "Aggiungi";
-    btnAggiungi.dataset.titolo = titolo;
-    btnAggiungi.dataset.autore = autore;
-    btnAggiungi.dataset.anno = anno;
-
-    li.append(divInfo, btnAggiungi);
-    return li;
-  });
-
-  listaRisultati.replaceChildren(...righe);
 }
 
-function mostraSpinner() {
-  document.getElementById("spinner").removeAttribute("hidden");
-  document.getElementById("errore").setAttribute("hidden", "");
+function logout() {
+  rimuoviDatiAuth();
+  document.getElementById("profilo-section").hidden = true;
+  renderAuthBox(gestisciLogin, logout);
 }
 
-function nascondiSpinner() {
-  document.getElementById("spinner").setAttribute("hidden", "");
+async function gestisciLogin(e) {
+  e.preventDefault();
+  const { username, password } = Object.fromEntries(new FormData(e.target));
+
+  try {
+    await login(username, password);
+    renderAuthBox(gestisciLogin, logout);
+    await mostraProfiloUtente();
+  } catch (err) {
+    alert(err.message);
+  }
 }
 
-function mostraErrore(msg) {
-  const elErrore = document.getElementById("errore");
-  elErrore.textContent = msg;
-  elErrore.removeAttribute("hidden");
-}
+async function mostraProfiloUtente() {
+  if (!getToken()) return;
 
-function salvaLibri() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(libri));
-}
-
-function caricaLibri() {
-  return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]").map((d) =>
-    d.dimensioneMb !== undefined
-      ? LibroDigitale.fromJSON(d)
-      : Libro.fromJSON(d),
-  );
-}
-
-function renderLibri() {
-  const lista = document.getElementById("lista-libri");
-  const html = libri
-    .map(
-      (l) => `
-    <li class="${l.letto ? "letto" : ""}" data-id="${l.id}">
-      <div class="info">
-        <span class="titolo">${l.titolo}</span>
-        <span class="badge-formato">${l.formato()}</span>
-        <div class="meta">${l.autore} — ${l.anno}</div>
-      </div>
-      <div class="azioni">
-        ${l.letto ? "✓ letto" : '<button data-azione="leggi">Segna come letto</button>'}
-      </div>
-    </li>`,
-    )
-    .join("");
-
-  lista.innerHTML = html;
-
-  lista.querySelectorAll(".azioni").forEach((divAzioni) => {
-    const btnRimuovi = document.createElement("button");
-    btnRimuovi.dataset.azione = "rimuovi";
-    btnRimuovi.textContent = "Rimuovi";
-    divAzioni.appendChild(btnRimuovi);
-  });
-
-  document.getElementById("contatore").textContent = libri.length;
+  try {
+    const profilo = await caricaProfilo();
+    if (profilo) {
+      renderProfilo(profilo);
+    }
+  } catch (err) {
+    logout();
+  }
 }
 
 document.getElementById("cerca").addEventListener("input", (e) => {
   const query = e.target.value.trim();
-
   clearTimeout(timeoutId);
 
   if (query.length < 3) {
@@ -178,19 +69,19 @@ document.getElementById("cerca").addEventListener("input", (e) => {
     document.getElementById("risultati").innerHTML = "";
     return;
   }
-  timeoutId = setTimeout (() => cerca(query), 400); 
+  timeoutId = setTimeout(() => eseguiRicerca(query), 400);
 });
 
 document.getElementById("risultati").addEventListener("click", (e) => {
   const bottone = e.target.closest("button[data-titolo]");
-  if(!bottone) return; 
+  if (!bottone) return;
 
-  const {titolo, autore, anno} = bottone.dataset; 
+  const { titolo, autore, anno } = bottone.dataset;
   const nuovoLibro = new Libro(titolo, autore, Number(anno) || 0);
 
   libri.push(nuovoLibro);
-  salvaLibri();
-  renderLibri(); 
+  salvaLibri(libri);
+  renderLibri(libri);
 
   bottone.textContent = "✓ Aggiunto";
   bottone.disabled = true;
@@ -222,8 +113,8 @@ document.getElementById("aggiungi-libro").addEventListener("submit", (e) => {
   }
 
   libri.push(nuovo);
-  salvaLibri();
-  renderLibri();
+  salvaLibri(libri);
+  renderLibri(libri);
   e.target.reset();
   document.getElementById("campo-dimensione").setAttribute("hidden", "");
 });
@@ -242,14 +133,20 @@ document.getElementById("lista-libri").addEventListener("click", (e) => {
     libri = libri.filter((l) => l.id !== id);
   }
 
-  salvaLibri();
-  renderLibri();
+  salvaLibri(libri);
+  renderLibri(libri);
 });
 
 document.getElementById("svuota-tutto").addEventListener("click", () => {
   libri = [];
   localStorage.removeItem(STORAGE_KEY);
-  renderLibri();
+  renderLibri(libri);
 });
 
-renderLibri();
+async function avvio() {
+  renderLibri(libri);
+  renderAuthBox(gestisciLogin, logout);
+  await mostraProfiloUtente();
+}
+
+avvio();
